@@ -2,6 +2,8 @@ const express = require('express');
 const app = express()
 const http = require('http').createServer(app)
 const io = require('socket.io')(http)
+var logger = require('morgan')
+var reload = require('reload')
 
 const port = process.env.PORT || 3000
 
@@ -69,7 +71,15 @@ io.on('connection', socket => {
     // })
  })
 
-
-http.listen(port, () => {
-  console.log(`listening on port ${port}`)
-});
+ // Reload code here
+reload(app).then(function (reloadReturned) {
+    // reloadReturned is documented in the returns API in the README
+   
+    // Reload started, start web server
+    http.listen(port, function () {
+        console.log('Web server listening on port ' + port)
+    })
+    }).catch(function (err) {
+        console.error('Reload could not start, could not start server/sample app', err)
+    }
+)
