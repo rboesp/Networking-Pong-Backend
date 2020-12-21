@@ -100,6 +100,7 @@ function startPong() {
         // ball.x = ball.gravitySpeed
         // ball.x += 1
         ball.x += a
+        ball.y += 0.2
 
         // console.log('Emitting...');
         io.emit('ballMove', ball)
@@ -122,9 +123,6 @@ function startPong() {
             io.emit('gameOver', winner)
         }
     }, 20)
-
-    //wait for bounces to be emited from frontend
-    //when bounces come in, emit to all players
 }
 
 io.on('connection', socket => { 
@@ -175,15 +173,14 @@ io.on('connection', socket => {
     // })
  })
 
- // Reload code here
-reload(app).then(function (reloadReturned) {
-    // reloadReturned is documented in the returns API in the README
-   
+ // Reload frontend here
+reload(app)
+.then(function (reloadReturned) {
+
     // Reload started, start web server
     http.listen(port, function () {
         console.log('Web server listening on port ' + port)
     })
-    }).catch(function (err) {
-        console.error('Reload could not start, could not start server/sample app', err)
-    }
-)
+}).catch(function (err) {
+    console.error('Reload could not start, could not start server/sample app', err)
+})
