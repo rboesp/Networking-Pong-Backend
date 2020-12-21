@@ -10,6 +10,7 @@ const port = process.env.PORT || 3000
 app.use(express.static('public'))
 
 let players = []
+// let ball = null
 
 class GamePadel {
     constructor (width, height, color, name, x, y) {
@@ -31,8 +32,8 @@ class GameBall {
         this.endAngle = 2 * Math.PI;
         this.speedX = 0;
         this.speedY = 0;
-        this.gravity = 0.1;
-        this.gravitySpeed = 0;
+        this.gravity = 1;
+        this.gravitySpeed = 50;
         this.bounce = 0.6;
     }
 }
@@ -44,12 +45,83 @@ function makeNewPiece(name) {
     return newPlayer
 }
 
+let a = -2
+/**
+ * 
+ * TODO: don't use x and y but speed x and y 
+ */
+
+
+const checkCrash = function(ball, brick) {
+    var ballTop = ball.y;
+    var ballBottom = ball.y + (ball.radius)
+    var ballLeft = ball.x 
+    var ballRight = ball.x + (ball.radius);
+
+    var brickLeft = brick.x;
+    var brickRight = brick.x + (brick.width);
+    var brickTop = brick.y;
+    var brickBottom = brick.y + (brick.height);
+    var crash = false;
+
+    if ((ballBottom < brickTop) ||
+    (ballTop > brickBottom) ||
+    (ballRight < brickLeft) ||
+    (ballLeft > brickRight)) {
+      crash = true;
+    }
+    return crash;
+  }
+
+function checkBallInEndzone(ball) {
+    const rightEnd = 480
+    const leftEnd = 0
+
+    if(ball.x <= leftEnd) {
+        return 'Winner: Right!'
+    }
+    if(ball.x >= rightEnd) {
+        return 'Winner: Left!'
+    }
+    return false
+}
+
+
+
 function startPong() {
     //make a new component
     const ball = new GameBall(240, 140, 4, 0)
 
     //emit to front end
     io.emit('startPong', ball)
+    
+    setInterval(() => {
+        // ball.gravitySpeed += ball.gravity
+        // ball.x = ball.gravitySpeed
+        // ball.x += 1
+        ball.x += a
+
+        // console.log('Emitting...');
+        io.emit('ballMove', ball)
+
+        const player1 = players[0]
+        const player2 = players[1]
+    
+        if(checkCrash(ball, player1)) {
+            io.emit('endzone', 'hit left!')
+            //ball.gravitySpeed = -(ball.gravitySpeed * ball.bounce);
+            a *= -1
+        }
+        if(checkCrash(ball, player2)) {
+            io.emit('endzone', 'hit right!')
+            a *= -1
+        }
+
+        const winner = checkBallInEndzone(ball)
+        if(winner) {
+            io.emit('gameOver', winner)
+        }
+    }, 20)
 
     //wait for bounces to be emited from frontend
     //when bounces come in, emit to all players

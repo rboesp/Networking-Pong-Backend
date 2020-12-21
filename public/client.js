@@ -41,12 +41,10 @@ function updatePlayerBrick(player) {
 }
 
 function updateGameBall() {
-  //update ball here 
   ctx.fillStyle = 'red'
+  ctx.beginPath()
   ctx.arc(gameBall.x, gameBall.y, gameBall.radius, gameBall.startAngle, gameBall.endAngle)
-  // ctx.stroke()
   ctx.fill()
-  //circel instead not rect
 }
 
 function clearBoard() {
@@ -86,17 +84,23 @@ socket.on('newMove', mutatedPlayers => {
   players = mutatedPlayers
 })
 
-socket.on('startPong', ball => {
-  gameBall = ball
+socket.on('startPong', startBall => {
+  gameBall = startBall
   updateGameBall()
-  // setInterval(updateGameBall, 5)
 })
 
-//ball moving on screen
-// socket.on('ballMovement', pos => {
-//   ball.x = pos.x
-//   ball.y = pos.y
-// })
+socket.on('ballMove', newBall => {
+  // console.log('receiving...');
+  gameBall = newBall
+})
+
+socket.on('endzone', arg => {
+  console.log(arg);
+})
+
+socket.on('gameOver', winner => {
+  console.log(winner);
+})
 
 // //msg room
 // socket.on('data', (arg) => {
