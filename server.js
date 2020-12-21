@@ -12,7 +12,7 @@ app.use(express.static('public'))
 let players = []
 // let ball = null
 
-class GamePadel {
+class GamePaddel {
     constructor (width, height, color, name, x, y) {
       this.width = width;
       this.height = height;
@@ -41,18 +41,19 @@ class GameBall {
 function makeNewPiece(name) {
     const x = !players.length ? 10 : 445
     console.log(x);
-    const newPlayer = new GamePadel(25, 75, "blue", name, x, 220);
+    const newPlayer = new GamePaddel(25, 75, "blue", name, x, 220);
     return newPlayer
 }
 
-let a = -2
+let xMov = -2
+let yMov = -1
 /**
  * 
  * TODO: don't use x and y but speed x and y 
  */
 
 
-const checkCrash = function(ball, brick) {
+const checkPaddelHit = function(ball, brick) {
     var ballTop = ball.y;
     var ballBottom = ball.y + (ball.radius)
     var ballLeft = ball.x 
@@ -86,7 +87,18 @@ function checkBallInEndzone(ball) {
     return false
 }
 
-
+function checkBallHitTops(ball) {
+    const top = 270
+    const bottom = 0
+    let hit = false
+    if(ball.y >= top) {
+        hit = true
+    }
+    if(ball.y <= bottom) {
+        hit = true
+    }
+    return hit
+}
 
 function startPong() {
     //make a new component
@@ -99,8 +111,8 @@ function startPong() {
         // ball.gravitySpeed += ball.gravity
         // ball.x = ball.gravitySpeed
         // ball.x += 1
-        ball.x += a
-        ball.y += 0.2
+        ball.x += xMov
+        ball.y += yMov /*TODO: make this bounce correctly */
 
         // console.log('Emitting...');
         io.emit('ballMove', ball)
@@ -108,14 +120,20 @@ function startPong() {
         const player1 = players[0]
         const player2 = players[1]
     
-        if(checkCrash(ball, player1)) {
+        if(checkPaddelHit(ball, player1)) {
             io.emit('endzone', 'hit left!')
             //ball.gravitySpeed = -(ball.gravitySpeed * ball.bounce);
-            a *= -1
+            xMov *= -1
+
         }
-        if(checkCrash(ball, player2)) {
+        if(checkPaddelHit(ball, player2)) {
             io.emit('endzone', 'hit right!')
-            a *= -1
+            xMov *= -1
+        }
+
+        if(checkBallHitTops(ball)){        
+            io.emit('endzone', 'hit up or down!')
+            yMov *= -1
         }
 
         const winner = checkBallInEndzone(ball)
