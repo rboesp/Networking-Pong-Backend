@@ -1,13 +1,14 @@
 /*GLOBAL VARIABLES*/
 const canvas = document.getElementById('board')
-const context = canvas.getContext("2d")
+const ctx = canvas.getContext("2d")
 const socket = io()
 let players = []
+let gameBall = null
 let username = ""
 
 
 /**
- TODO: disconnect on reload
+ TODO: 
  */
 
 
@@ -28,17 +29,28 @@ function sendMoveToServer(e) {
 function updateGameArea() {
     clearBoard();
     players.forEach(player => {
-      updateBoard(player);
-    })          
+      updatePlayerBrick(player);
+    })      
+    updateGameBall()
 }
 
-function updateBoard(player) {
-  context.fillStyle = player.color
-  context.fillRect(player.x, player.y, player.width, player.height)
+function updatePlayerBrick(player) {
+  ctx.fillStyle = player.color
+  ctx.fillRect(player.x, player.y, player.width, player.height)
+  
+}
+
+function updateGameBall() {
+  //update ball here 
+  ctx.fillStyle = 'red'
+  ctx.arc(gameBall.x, gameBall.y, gameBall.radius, gameBall.startAngle, gameBall.endAngle)
+  // ctx.stroke()
+  ctx.fill()
+  //circel instead not rect
 }
 
 function clearBoard() {
-  context.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 }
 
 function startBoard() {
@@ -73,6 +85,18 @@ socket.on('players', newPlayers => {
 socket.on('newMove', mutatedPlayers => {
   players = mutatedPlayers
 })
+
+socket.on('startPong', ball => {
+  gameBall = ball
+  updateGameBall()
+  // setInterval(updateGameBall, 5)
+})
+
+//ball moving on screen
+// socket.on('ballMovement', pos => {
+//   ball.x = pos.x
+//   ball.y = pos.y
+// })
 
 // //msg room
 // socket.on('data', (arg) => {

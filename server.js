@@ -11,11 +11,7 @@ app.use(express.static('public'))
 
 let players = []
 
-/**
- TODO: disconnect on reload
- */
-
-class component {
+class GamePadel {
     constructor (width, height, color, name, x, y) {
       this.width = width;
       this.height = height;
@@ -24,6 +20,39 @@ class component {
       this.color = color;  
       this.name = name
   }
+}
+
+class GameBall {
+    constructor(x , y , radius, startAngle) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.startAngle = startAngle;
+        this.endAngle = 2 * Math.PI;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.gravity = 0.1;
+        this.gravitySpeed = 0;
+        this.bounce = 0.6;
+    }
+}
+
+function makeNewPiece(name) {
+    const x = !players.length ? 10 : 445
+    console.log(x);
+    const newPlayer = new GamePadel(25, 75, "blue", name, x, 220);
+    return newPlayer
+}
+
+function startPong() {
+    //make a new component
+    const ball = new GameBall(240, 140, 4, 0)
+
+    //emit to front end
+    io.emit('startPong', ball)
+
+    //wait for bounces to be emited from frontend
+    //when bounces come in, emit to all players
 }
 
 io.on('connection', socket => { 
@@ -37,11 +66,14 @@ io.on('connection', socket => {
         })
     
         if(!playerNames.includes(name)) {
-            const newGamePiece = new component(25, 75, "blue", name, 10, 220);
+            const newGamePiece = makeNewPiece(name)
             players.push(newGamePiece)
         }
     
         io.emit('players', players)
+
+        if(players.length !== 2) return
+        startPong()
     })
 
     socket.on('userMove', move => {
