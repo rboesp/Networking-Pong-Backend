@@ -19,7 +19,7 @@ function sendDisconnectToServer(e) {
 function sendMoveToServer(e) {
   const move = {
     name: username,
-    x : e.pageX,
+    // x : e.pageX,
     y : e.pageY
   }
   socket.emit('userMove', move)

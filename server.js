@@ -35,7 +35,7 @@ io.on('connection', socket => {
         })
     
         if(!playerNames.includes(name)) {
-            const newGamePiece = new component(75, 75, "blue", name, 10, 220);
+            const newGamePiece = new component(25, 75, "blue", name, 10, 220);
             players.push(newGamePiece)
         }
     
@@ -49,7 +49,7 @@ io.on('connection', socket => {
             return move.name === player.name
         })
         if(!playerToUpdate.length) return
-        playerToUpdate[0].x = move.x
+        // playerToUpdate[0].x = move.x
         playerToUpdate[0].y = move.y
         // console.log(players);
         io.emit('newMove', players)
