@@ -11,26 +11,26 @@ app.use(express.static('public'))
 
 //global variables
 let players = []
-let xMov = -2
-let yMov = -1 //amount they are moving per frame, sign means right or left
+let xMovement = -2
+let yMovement = -1 //amount they are moving per frame, sign means right or left
 
 class GamePaddel {
-    constructor (width, height, color, name, x, y) {
-      this.width = width;
-      this.height = height;
-      this.x = x;
-      this.y = y;  
-      this.color = color;  
+    constructor (name, x, y) {
+      this.width = 5
+      this.height = 60 
+      this.color = 'blue'
       this.name = name
+      this.x = x
+      this.y = y
   }
 }
 
 class GameBall {
     constructor(x , y , radius, startAngle) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.startAngle = startAngle;
+        this.x = 240;
+        this.y = 140;
+        this.radius = 4; //double for diameter
+        this.startAngle = 0;
         this.endAngle = 2 * Math.PI;
         this.speedX = 0;
         this.speedY = 0;
@@ -40,19 +40,25 @@ class GameBall {
     }
 }
 
+const BALL_REFRESH_RATE = 20
+const player1Start = 10
+const player2Start = 445
+
+const paddleStartY = 220
+
+const boardWidth = 480
+const boardHeight = 270
+
 function makeNewPiece(name) {
-    const x = !players.length ? 10 : 445
-    console.log(x);
-    const newPlayer = new GamePaddel(25, 75, "blue", name, x, 220);
+    const startLocationX = !players.length ? player1Start : player2Start
+    console.log(startLocationX);
+    const newPlayer = new GamePaddel(name, startLocationX,paddleStartY);
     return newPlayer
 }
 
 /**
- * 
- * TODO: don't use x and y but speed x and y 
+ * TODO: don't use x and y but speed x and y ???
  */
-
-
 const checkPaddelHit = function(ball, brick) {
     var ballTop = ball.y;
     var ballBottom = ball.y + (ball.radius)
@@ -75,7 +81,7 @@ const checkPaddelHit = function(ball, brick) {
   }
 
 function checkBallInEndzone(ball) {
-    const rightEnd = 480
+    const rightEnd = boardWidth
     const leftEnd = 0
 
     if(ball.x <= leftEnd) {
@@ -88,7 +94,7 @@ function checkBallInEndzone(ball) {
 }
 
 function checkBallHitTops(ball) {
-    const top = 270
+    const top = boardHeight
     const bottom = 0
     let hit = false
     if(ball.y >= top) {
@@ -100,9 +106,13 @@ function checkBallHitTops(ball) {
     return hit
 }
 
+function changeBallDirection(dir) {
+    return dir * -1
+}
+
 function startPong() {
     //make a new component
-    const ball = new GameBall(240, 140, 4, 0)
+    const ball = new GameBall()
 
     //emit to front end
     io.emit('startPong', ball)
@@ -112,26 +122,24 @@ function startPong() {
         // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
         // ball.x += 1
 
-        ball.x += xMov
-        ball.y += yMov /*TODO: make this bounce according to paddle ball hit on paddle*/
+        ball.x += xMovement
+        ball.y += yMovement /*TODO: make this bounce according to paddle ball hit on paddle*/
         io.emit('ballMove', ball)
 
         const player1 = players[0]
         const player2 = players[1]
     
-        if(checkPaddelHit(ball, player1)) {
-            io.emit('endzone', 'hit left!')
-            xMov *= -1
-        }
-
-        if(checkPaddelHit(ball, player2)) {
-            io.emit('endzone', 'hit right!')
-            xMov *= -1
+        if(
+            checkPaddelHit(ball, player1) || 
+            checkPaddelHit(ball, player2)
+        ) {    
+            io.emit('bounce', 'bounce!')
+            xMovement = changeBallDirection(xMovement)
         }
 
         if(checkBallHitTops(ball)){        
-            io.emit('endzone', 'hit up or down!')
-            yMov *= -1
+            io.emit('bounce', 'hit up or down!')
+            yMovement = changeBallDirection(yMovement)
         }
 
         const winner = checkBallInEndzone(ball)
@@ -139,7 +147,7 @@ function startPong() {
             io.emit('gameOver', winner)
         }
 
-    }, 20)
+    }, BALL_REFRESH_RATE)
 }
 
 io.on('connection', socket => { 
@@ -170,9 +178,7 @@ io.on('connection', socket => {
             return move.name === player.name
         })
         if(!playerToUpdate.length) return
-        // playerToUpdate[0].x = move.x
         playerToUpdate[0].y = move.y
-        // console.log(players);
         io.emit('newMove', players)
     })
 
