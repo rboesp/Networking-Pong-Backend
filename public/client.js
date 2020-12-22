@@ -37,7 +37,12 @@ function updateGameArea() {
 function updatePlayerBrick(player) {
   ctx.fillStyle = player.color
   ctx.fillRect(player.x, player.y, player.width, player.height)
-  
+  ctx.fillStyle = 'red'
+  ctx.fillRect(player.x, player.y, 5,10) 
+  ctx.fillStyle = 'yellow'
+  ctx.fillRect(player.x, player.y+28, 5,4) 
+  ctx.fillStyle = 'red'
+  ctx.fillRect(player.x, player.y+50, 5,10) 
 }
 
 function updateGameBall() {
@@ -53,6 +58,7 @@ function clearBoard() {
 
 function startBoard() {
   username = $('#enter-username').val()
+  // username = Math.floor(Math.random()*10)+1
   $('#username-row').hide()
   $('#welcome-row').hide()
   $("#send-btn").prop('disabled', false)
@@ -96,6 +102,18 @@ socket.on('ballMove', newBall => {
 
 socket.on('bounce', arg => {
   console.log(arg);
+  switch (arg) {
+    case 'hit left!':
+      $('#left').attr('class', 'hit')
+      $('#right').attr('class', 'no-hit')
+      break;
+    case 'hit right!':
+      $('#right').attr('class', 'hit')
+      $('#left').attr('class', 'no-hit')
+      break;
+    default:
+      break;
+  }
 })
 
 socket.on('gameOver', winner => {
@@ -116,5 +134,5 @@ window.onload = function() {
 
   /*EVENT LISTENERS */
   $('#username-submit').click(startBoard)
-
+// startBoard()
 }

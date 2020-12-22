@@ -15,13 +15,13 @@ let yMovement = -1 //amount they are moving per frame, sign means right or left
 
 class GamePaddel {
     constructor (name, x, y) {
-      this.width = 5
-      this.height = 60 
-      this.color = 'blue'
-      this.name = name
-      this.x = x
-      this.y = y
-  }
+        this.width = 5
+        this.height = 60 
+        this.color = 'blue'
+        this.name = name
+        this.x = x
+        this.y = y
+    }
 }
 
 class GameBall {
@@ -55,6 +55,14 @@ function makeNewPiece(name) {
     return newPlayer
 }
 
+function fillRange(lowEnd, highEnd) {
+    const list = [];
+    for (var i = lowEnd; i <= highEnd; i++) {
+        list.push(i);
+    }
+    return list
+}
+
 /**
  * TODO: don't use x and y but speed x and y ???
  */
@@ -68,6 +76,12 @@ const checkPaddelHit = function(ball, brick) {
     var brickRight = brick.x + (brick.width);
     var brickTop = brick.y;
     var brickBottom = brick.y + (brick.height);
+
+     const redRanges = fillRange(brick.y+0, brick.y+10).concat(fillRange(brick.y+50, brick.y+60))
+     const yellowRanges = fillRange( brick.y+28, brick.y+32)
+     const blueRanges = fillRange(brick.y+11, brick.y+27).concat(fillRange(brick.y+33, brick.y+49))
+     const paddleHitRanges = [redRanges, yellowRanges, blueRanges]
+
     var crash = false;
 
     if ((ballBottom < brickTop) ||
@@ -75,6 +89,9 @@ const checkPaddelHit = function(ball, brick) {
     (ballRight < brickLeft) ||
     (ballLeft > brickRight)) {
       crash = true;
+    //   console.log('HIT!'); ???
+    //   const range = paddleHitRanges.filter(range => range.includes(ball.y))
+    //   console.log(range);
     }
     return crash;
   }
