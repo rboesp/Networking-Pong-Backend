@@ -9,8 +9,10 @@ const port = process.env.PORT || 3000
 
 app.use(express.static('public'))
 
+//global variables
 let players = []
-// let ball = null
+let xMov = -2
+let yMov = -1 //amount they are moving per frame, sign means right or left
 
 class GamePaddel {
     constructor (width, height, color, name, x, y) {
@@ -45,8 +47,6 @@ function makeNewPiece(name) {
     return newPlayer
 }
 
-let xMov = -2
-let yMov = -1
 /**
  * 
  * TODO: don't use x and y but speed x and y 
@@ -109,12 +109,11 @@ function startPong() {
     
     setInterval(() => {
         // ball.gravitySpeed += ball.gravity
-        // ball.x = ball.gravitySpeed
+        // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
         // ball.x += 1
-        ball.x += xMov
-        ball.y += yMov /*TODO: make this bounce correctly */
 
-        // console.log('Emitting...');
+        ball.x += xMov
+        ball.y += yMov /*TODO: make this bounce according to paddle ball hit on paddle*/
         io.emit('ballMove', ball)
 
         const player1 = players[0]
@@ -122,10 +121,9 @@ function startPong() {
     
         if(checkPaddelHit(ball, player1)) {
             io.emit('endzone', 'hit left!')
-            //ball.gravitySpeed = -(ball.gravitySpeed * ball.bounce);
             xMov *= -1
-
         }
+
         if(checkPaddelHit(ball, player2)) {
             io.emit('endzone', 'hit right!')
             xMov *= -1
@@ -140,6 +138,7 @@ function startPong() {
         if(winner) {
             io.emit('gameOver', winner)
         }
+
     }, 20)
 }
 

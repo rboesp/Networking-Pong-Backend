@@ -94,7 +94,7 @@ socket.on('ballMove', newBall => {
   gameBall = newBall
 })
 
-socket.on('endzone', arg => {
+socket.on('bounce', arg => {
   console.log(arg);
 })
 
