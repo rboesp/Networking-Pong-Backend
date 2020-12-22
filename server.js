@@ -2,7 +2,6 @@ const express = require('express');
 const app = express()
 const http = require('http').createServer(app)
 const io = require('socket.io')(http)
-var logger = require('morgan')
 var reload = require('reload')
 
 const port = process.env.PORT || 3000
@@ -40,6 +39,7 @@ class GameBall {
     }
 }
 
+const fameRate = 20
 const player1Start = 10
 const player2Start = 445
 
@@ -148,7 +148,7 @@ function startPong() {
             io.emit('gameOver', winner)
         }
 
-    }, 20)
+    }, fameRate)
 }
 
 io.on('connection', socket => { 
@@ -173,15 +173,11 @@ io.on('connection', socket => {
     })
 
     socket.on('userMove', move => {
-        // console.log(`${move.name} updating!`)
-        // console.log(players);
         const playerToUpdate = players.filter(player => {
             return move.name === player.name
         })
         if(!playerToUpdate.length) return
-        // playerToUpdate[0].x = move.x
         playerToUpdate[0].y = move.y
-        // console.log(players);
         io.emit('newMove', players)
     })
 
@@ -193,10 +189,6 @@ io.on('connection', socket => {
         console.log(players);
         io.emit('players', players)
     })
-
-    // socket.on('disconnect', () => {
-    //     console.log('a user disconnected')
-    // })
  })
 
  // Reload frontend here
