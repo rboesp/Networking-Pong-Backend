@@ -40,7 +40,6 @@ class GameBall {
     }
 }
 
-const BALL_REFRESH_RATE = 20
 const player1Start = 10
 const player2Start = 445
 
@@ -129,11 +128,13 @@ function startPong() {
         const player1 = players[0]
         const player2 = players[1]
     
-        if(
-            checkPaddelHit(ball, player1) || 
-            checkPaddelHit(ball, player2)
-        ) {    
-            io.emit('bounce', 'bounce!')
+        if(checkPaddelHit(ball, player1)) {
+            io.emit('bounce', 'hit left!')
+            xMovement = changeBallDirection(xMovement)
+        }
+
+        if(checkPaddelHit(ball, player2)) {
+            io.emit('bounce', 'hit right!')
             xMovement = changeBallDirection(xMovement)
         }
 
@@ -147,7 +148,7 @@ function startPong() {
             io.emit('gameOver', winner)
         }
 
-    }, BALL_REFRESH_RATE)
+    }, 20)
 }
 
 io.on('connection', socket => { 
@@ -178,7 +179,9 @@ io.on('connection', socket => {
             return move.name === player.name
         })
         if(!playerToUpdate.length) return
+        // playerToUpdate[0].x = move.x
         playerToUpdate[0].y = move.y
+        // console.log(players);
         io.emit('newMove', players)
     })
 
