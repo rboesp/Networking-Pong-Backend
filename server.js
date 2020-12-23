@@ -9,9 +9,9 @@ const port = process.env.PORT || 3000
 app.use(express.static('public'))
 
 //global variables
-let players = []
+let paddles = []
 let ballXMovement = -3
-let ballYMovement = -1 //amount they are moving per frame, sign means right or left
+let ballYMovement = -1 //amount they are moving per frame, sign means right or left, up or down
 
 class GamePaddel {
     constructor (name, x, y) {
@@ -39,7 +39,7 @@ class GameBall {
     }
 }
 
-const fameRate = 20
+const refreshRate = 20
 const player1Start = 10
 const player2Start = 445
 
@@ -49,9 +49,9 @@ const boardWidth = 480
 const boardHeight = 270
 
 function makeNewPiece(name) {
-    const startLocationX = !players.length ? player1Start : player2Start
-    console.log(startLocationX);
-    const newPlayer = new GamePaddel(name, startLocationX,paddleStartY);
+    const paddleStartX = !paddles.length ? player1Start : player2Start
+    console.log(paddleStartX);
+    const newPlayer = new GamePaddel(name, paddleStartX, paddleStartY);
     return newPlayer
 }
 
@@ -88,20 +88,20 @@ function changeBallDirection(dir) {
 /**
  * TODO: don't use x and y but speed x and y ???
  */
-const checkPaddelHit = function(ball, brick, player) {
+const checkPaddelHit = function(ball, paddle, paddleSide) {
     var ballTop = ball.y;
     var ballBottom = ball.y + (ball.radius)
     var ballLeft = ball.x 
     var ballRight = ball.x + (ball.radius);
 
-    var brickLeft = brick.x;
-    var brickRight = brick.x + (brick.width);
-    var brickTop = brick.y;
-    var brickBottom = brick.y + (brick.height);
+    var brickLeft = paddle.x;
+    var brickRight = paddle.x + (paddle.width);
+    var brickTop = paddle.y;
+    var brickBottom = paddle.y + (paddle.height);
 
     var crash = false
 
-    if(player === 'player1') {
+    if(paddleSide === 'left') {
         if (
             (brickBottom >= ballBottom) &&
             (brickRight >= ballLeft) &&
@@ -120,81 +120,64 @@ const checkPaddelHit = function(ball, brick, player) {
         } 
     }
     return crash;
-  }
+}
+
+function playPong(ball, yMoveAfterPaddleHit, interval) {
+    // ball.gravitySpeed += ball.gravity
+    // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
+    // ball.x += 1
+
+    //angle heres
+    
+
+    /**WAS HERE, CHECK THIS WORKS */
+    yMoveAfterPaddleHit = 0
+    const paddleSides = ['left', 'right']
+    paddles.forEach((paddle,i) => {
+        if(!checkPaddelHit(ball, paddle, paddleSides[i])) return
+        io.emit('bounce', 'hit paddel!!')
+        ballXMovement = changeBallDirection(ballXMovement)
+        var ballBottom = ball.y + (ball.radius)
+        var brickTopRedRange = paddle.y + 10 //+ is down on canvas
+        yMoveAfterPaddleHit = 10
+        if(ballBottom > brickTopRedRange) yMoveAfterPaddleHit = 2
+    })
+
+    /*TODO: */
+    //if there was a bounce on a paddle, 
+    //figure out where on paddle
+    //and ball movement appropriately 
+
+    if(checkBallHitTops(ball)){        
+        io.emit('bounce', 'hit up or down!')
+        ballYMovement = changeBallDirection(ballYMovement)
+        yMoveAfterPaddleHit = 0 //not needed
+    }
+
+    const winner = checkBallInEndzone(ball)
+    if(winner) {
+        io.emit('gameOver', winner)
+        clearInterval(interval)
+    }
+
+
+    ball.x += ballXMovement //increasing this would make ball move faster towards the paddles
+    ball.y += (ballYMovement -= yMoveAfterPaddleHit) //this mutates the y movement, something needs to reset it though or it will cause problems with circling
+    io.emit('ballMove', ball)
+
+}
 
 function startPong() {
-    //make a new component
     const ball = new GameBall()
+
+    let yMoveAfterPaddleHit = 0
 
     //emit to front end
     io.emit('startPong', ball)
-    let angle = 0
     
     const gameInterval = setInterval(() => {
-        // ball.gravitySpeed += ball.gravity
-        // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
-        // ball.x += 1
-
-        //angle heres
-        
-
-        /**WAS HERE, CHECK THIS WORKS */
-        const names = ['player1', 'player2']
-        players.forEach((player,i) => {
-            if(checkPaddelHit(ball, player, names[i])) {
-                io.emit('bounce', 'hit paddel left!!')
-                ballXMovement = changeBallDirection(ballXMovement)
-                var ballBottom = ball.y + (ball.radius)
-                var brickTopRedRange = player.y + 10
-                angle = 10
-                // if(ballBottom <= brickTopRedRange) {
-                //     angle = 10
-                // }
-                // else {
-                //     angle = 2
-                // }
-            }
-        })
-        // else if(checkPaddelHit(ball, players[1], 'player2')) {
-        //     io.emit('bounce', 'hit paddel right!!')
-        //     ballXMovement = changeBallDirection(ballXMovement)
-        //     var ballBottom = ball.y + (ball.radius)
-        //     var brickTopRedRange = players[1].y + 10
-        //     angle = 10
-        //     // if(ballBottom <= brickTopRedRange) {
-        //     //     angle = 10
-        //     // }
-        //     // else {
-        //     //     angle = 2
-        //     // }
-        // }
-        else {
-            angle = 0
-        }
-
-        /*TODO: */
-        //if there was a bounce on a paddle, 
-        //figure out where on paddle
-        //and ball movement appropriately 
-
-        if(checkBallHitTops(ball)){        
-            io.emit('bounce', 'hit up or down!')
-            ballYMovement = changeBallDirection(ballYMovement)
-            angle = 0
-        }
-
-        const winner = checkBallInEndzone(ball)
-        if(winner) {
-            io.emit('gameOver', winner)
-            clearInterval(gameInterval)
-        }
-
-
-        ball.x += ballXMovement //increasing this would make ball move faster towards the paddles
-        ball.y += (ballYMovement -= angle)
-        io.emit('ballMove', ball)
-
-    }, fameRate)
+        playPong(ball, yMoveAfterPaddleHit, gameInterval)
+    }, refreshRate)
 }
 
 io.on('connection', socket => { 
@@ -203,37 +186,35 @@ io.on('connection', socket => {
         const name = username
         console.log(name + ' connected!')
     
-        const playerNames = players.map(player => {
-            return player.name
-        })
+        const playerNames = paddles.map(player => player.name)
     
         if(!playerNames.includes(name)) {
             const newGamePiece = makeNewPiece(name)
-            players.push(newGamePiece)
+            paddles.push(newGamePiece)
         }
     
-        io.emit('players', players)
+        io.emit('players', paddles)
 
-        if(players.length !== 2) return
+        if(paddles.length !== 2) return
         startPong()
     })
 
     socket.on('userMove', move => {
-        const playerToUpdate = players.filter(player => {
+        const playerToUpdate = paddles.filter(player => {
             return move.name === player.name
-        })
-        if(!playerToUpdate.length) return
-        playerToUpdate[0].y = move.y
-        io.emit('newMove', players)
+        })[0]
+        if(!playerToUpdate) return
+        playerToUpdate.y = move.y
+        io.emit('newMove', paddles)
     })
 
     socket.on('leaving', name => {
-        players = players.filter(player => {
+        paddles = paddles.filter(player => {
             return player.name !== name
         })
         console.log(name + " disconnected!");
-        console.log(players);
-        io.emit('players', players)
+        console.log(paddles);
+        io.emit('players', paddles)
     })
  })
 
