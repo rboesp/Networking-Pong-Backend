@@ -10,7 +10,7 @@ app.use(express.static('public'))
 
 //global variables
 let players = []
-let ballXMovement = -2
+let ballXMovement = -3
 let ballYMovement = -1 //amount they are moving per frame, sign means right or left
 
 class GamePaddel {
@@ -55,33 +55,6 @@ function makeNewPiece(name) {
     return newPlayer
 }
 
-/**
- * TODO: don't use x and y but speed x and y ???
- */
-const checkPaddelHit = function(ball, brick) {
-    var ballTop = ball.y;
-    var ballBottom = ball.y + (ball.radius)
-    var ballLeft = ball.x 
-    var ballRight = ball.x + (ball.radius);
-
-    var brickLeft = brick.x;
-    var brickRight = brick.x + (brick.width);
-    var brickTop = brick.y;
-    var brickBottom = brick.y + (brick.height);
-
-    var crash = false
-
-    if (
-        (ballBottom < brickTop) ||
-        (ballTop > brickBottom) ||
-        (ballRight < brickLeft) ||
-        (ballLeft > brickRight)
-    ) {
-        crash = true;
-    } 
-    return crash;
-  }
-
 function checkBallInEndzone(ball) {
     const rightEnd = boardWidth
     const leftEnd = 0
@@ -112,37 +85,114 @@ function changeBallDirection(dir) {
     return dir * -1
 }
 
+/**
+ * TODO: don't use x and y but speed x and y ???
+ */
+const checkPaddelHit = function(ball, brick, player) {
+    var ballTop = ball.y;
+    var ballBottom = ball.y + (ball.radius)
+    var ballLeft = ball.x 
+    var ballRight = ball.x + (ball.radius);
+
+    var brickLeft = brick.x;
+    var brickRight = brick.x + (brick.width);
+    var brickTop = brick.y;
+    var brickBottom = brick.y + (brick.height);
+
+    var crash = false
+
+    if(player === 'player1') {
+        if (
+            (brickBottom >= ballBottom) &&
+            (brickRight >= ballLeft) &&
+            (brickTop <= ballTop)
+        ) {
+            crash = true;
+        } 
+    }
+    else {
+        if (
+            (brickBottom >= ballBottom) &&
+            (brickLeft <= ballRight) &&
+            (brickTop <= ballTop)
+        ) {
+            crash = true;
+        } 
+    }
+    return crash;
+  }
+
 function startPong() {
     //make a new component
     const ball = new GameBall()
 
     //emit to front end
     io.emit('startPong', ball)
+    let angle = 0
     
-    setInterval(() => {
+    const gameInterval = setInterval(() => {
         // ball.gravitySpeed += ball.gravity
         // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
         // ball.x += 1
 
-        ball.x += ballXMovement
-        ball.y += ballYMovement /*TODO: make this bounce according to paddle ball hit on paddle*/
-        io.emit('ballMove', ball)
-    
-        players.forEach(player => {
-            if(checkPaddelHit(ball, player)) {
+        //angle heres
+        
+
+        /**WAS HERE, CHECK THIS WORKS */
+        const names = ['player1', 'player2']
+        players.forEach((player,i) => {
+            if(checkPaddelHit(ball, player, names[i])) {
+                io.emit('bounce', 'hit paddel left!!')
                 ballXMovement = changeBallDirection(ballXMovement)
+                var ballBottom = ball.y + (ball.radius)
+                var brickTopRedRange = player.y + 10
+                angle = 10
+                // if(ballBottom <= brickTopRedRange) {
+                //     angle = 10
+                // }
+                // else {
+                //     angle = 2
+                // }
             }
         })
+        // else if(checkPaddelHit(ball, players[1], 'player2')) {
+        //     io.emit('bounce', 'hit paddel right!!')
+        //     ballXMovement = changeBallDirection(ballXMovement)
+        //     var ballBottom = ball.y + (ball.radius)
+        //     var brickTopRedRange = players[1].y + 10
+        //     angle = 10
+        //     // if(ballBottom <= brickTopRedRange) {
+        //     //     angle = 10
+        //     // }
+        //     // else {
+        //     //     angle = 2
+        //     // }
+        // }
+        else {
+            angle = 0
+        }
+
+        /*TODO: */
+        //if there was a bounce on a paddle, 
+        //figure out where on paddle
+        //and ball movement appropriately 
 
         if(checkBallHitTops(ball)){        
             io.emit('bounce', 'hit up or down!')
             ballYMovement = changeBallDirection(ballYMovement)
+            angle = 0
         }
 
         const winner = checkBallInEndzone(ball)
         if(winner) {
             io.emit('gameOver', winner)
+            clearInterval(gameInterval)
         }
+
+
+        ball.x += ballXMovement //increasing this would make ball move faster towards the paddles
+        ball.y += (ballYMovement -= angle)
+        io.emit('ballMove', ball)
 
     }, fameRate)
 }
