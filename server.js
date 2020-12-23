@@ -69,14 +69,16 @@ const checkPaddelHit = function(ball, brick) {
     var brickTop = brick.y;
     var brickBottom = brick.y + (brick.height);
 
-    var crash = false;
+    var crash = false
 
-    if ((ballBottom < brickTop) ||
-    (ballTop > brickBottom) ||
-    (ballRight < brickLeft) ||
-    (ballLeft > brickRight)) {
-      crash = true;
-    }
+    if (
+        (ballBottom < brickTop) ||
+        (ballTop > brickBottom) ||
+        (ballRight < brickLeft) ||
+        (ballLeft > brickRight)
+    ) {
+        crash = true;
+    } 
     return crash;
   }
 
