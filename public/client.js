@@ -20,7 +20,6 @@ function sendDisconnectToServer(e) {
 function sendMoveToServer(e) {
   const move = {
     name: username,
-    // x : e.pageX,
     y : e.pageY
   }
   socket.emit('userMove', move)
@@ -102,18 +101,18 @@ socket.on('ballMove', newBall => {
 
 socket.on('bounce', arg => {
   console.log(arg);
-  switch (arg) {
-    case 'hit left!':
-      $('#left').attr('class', 'hit')
-      $('#right').attr('class', 'no-hit')
-      break;
-    case 'hit right!':
-      $('#right').attr('class', 'hit')
-      $('#left').attr('class', 'no-hit')
-      break;
-    default:
-      break;
-  }
+  // switch (arg) {
+  //   case 'hit left!':
+  //     $('#left').attr('class', 'hit')
+  //     $('#right').attr('class', 'no-hit')
+  //     break;
+  //   case 'hit right!':
+  //     $('#right').attr('class', 'hit')
+  //     $('#left').attr('class', 'no-hit')
+  //     break;
+  //   default:
+  //     break;
+  // }
 })
 
 socket.on('gameOver', winner => {

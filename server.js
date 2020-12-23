@@ -10,8 +10,8 @@ app.use(express.static('public'))
 
 //global variables
 let players = []
-let xMovement = -2
-let yMovement = -1 //amount they are moving per frame, sign means right or left
+let ballXMovement = -2
+let ballYMovement = -1 //amount they are moving per frame, sign means right or left
 
 class GamePaddel {
     constructor (name, x, y) {
@@ -55,14 +55,6 @@ function makeNewPiece(name) {
     return newPlayer
 }
 
-function fillRange(lowEnd, highEnd) {
-    const list = [];
-    for (var i = lowEnd; i <= highEnd; i++) {
-        list.push(i);
-    }
-    return list
-}
-
 /**
  * TODO: don't use x and y but speed x and y ???
  */
@@ -77,11 +69,6 @@ const checkPaddelHit = function(ball, brick) {
     var brickTop = brick.y;
     var brickBottom = brick.y + (brick.height);
 
-     const redRanges = fillRange(brick.y+0, brick.y+10).concat(fillRange(brick.y+50, brick.y+60))
-     const yellowRanges = fillRange( brick.y+28, brick.y+32)
-     const blueRanges = fillRange(brick.y+11, brick.y+27).concat(fillRange(brick.y+33, brick.y+49))
-     const paddleHitRanges = [redRanges, yellowRanges, blueRanges]
-
     var crash = false;
 
     if ((ballBottom < brickTop) ||
@@ -89,9 +76,6 @@ const checkPaddelHit = function(ball, brick) {
     (ballRight < brickLeft) ||
     (ballLeft > brickRight)) {
       crash = true;
-    //   console.log('HIT!'); ???
-    //   const range = paddleHitRanges.filter(range => range.includes(ball.y))
-    //   console.log(range);
     }
     return crash;
   }
@@ -138,26 +122,19 @@ function startPong() {
         // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
         // ball.x += 1
 
-        ball.x += xMovement
-        ball.y += yMovement /*TODO: make this bounce according to paddle ball hit on paddle*/
+        ball.x += ballXMovement
+        ball.y += ballYMovement /*TODO: make this bounce according to paddle ball hit on paddle*/
         io.emit('ballMove', ball)
-
-        const player1 = players[0]
-        const player2 = players[1]
     
-        if(checkPaddelHit(ball, player1)) {
-            io.emit('bounce', 'hit left!')
-            xMovement = changeBallDirection(xMovement)
-        }
-
-        if(checkPaddelHit(ball, player2)) {
-            io.emit('bounce', 'hit right!')
-            xMovement = changeBallDirection(xMovement)
-        }
+        players.forEach(player => {
+            if(checkPaddelHit(ball, player)) {
+                ballXMovement = changeBallDirection(ballXMovement)
+            }
+        })
 
         if(checkBallHitTops(ball)){        
             io.emit('bounce', 'hit up or down!')
-            yMovement = changeBallDirection(yMovement)
+            ballYMovement = changeBallDirection(ballYMovement)
         }
 
         const winner = checkBallInEndzone(ball)
