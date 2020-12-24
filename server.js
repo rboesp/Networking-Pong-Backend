@@ -10,8 +10,6 @@ app.use(express.static('public'))
 
 //global variables
 let paddles = []
-let ballXMovement = -3
-let ballYMovement = -1 //amount they are moving per frame, sign means right or left, up or down
 
 class GamePaddel {
     constructor (name, x, y) {
@@ -122,47 +120,56 @@ const checkPaddelHit = function(ball, paddle, paddleSide) {
     return crash;
 }
 
-function playPong(ball, yMoveAfterPaddleHit, interval) {
-    // ball.gravitySpeed += ball.gravity
-    // ball.x = ball.gravitySpeed /*TODO: either use this or take it out */
-    // ball.x += 1
+let ballXDirection = -1 //left
+let ballYDirection = -1 //up
+let ballXMovement = 3
+let ballYMovement = 1 //amount they are moving per frame, sign means right or left, up or down
+//angle here
+let yAngleMultiplier = 1
 
-    //angle heres
-    
+function playPong(ball, interval) {
 
-    /**WAS HERE, CHECK THIS WORKS */
-    yMoveAfterPaddleHit = 0
     const paddleSides = ['left', 'right']
     paddles.forEach((paddle,i) => {
         if(!checkPaddelHit(ball, paddle, paddleSides[i])) return
         io.emit('bounce', 'hit paddel!!')
-        ballXMovement = changeBallDirection(ballXMovement)
+
+        //always switch x movement to go other direction
+        ballXDirection = changeBallDirection(ballXDirection)
+
+        //also swtich y, but by varying amounts based on
+        //where the ball hit on the paddle
         var ballBottom = ball.y + (ball.radius)
-        var brickTopRedRange = paddle.y + 10 //+ is down on canvas
-        yMoveAfterPaddleHit = 10
-        if(ballBottom > brickTopRedRange) yMoveAfterPaddleHit = 2
+        var brickTopRedRange = paddle.y + 30 //+ is down on canvas
+        if(ballBottom < brickTopRedRange) {
+
+
+            /*TODO: MAKE RANGES, MAKE INCLUDES TO FIGURE OUT IF IT IS IN ONE OF THE TWO RANGES RED (TOP + BOTTOM), YELLOW */
+
+            //hit top red part of paddle
+            io.emit('bounce', 'hit red!')
+            yAngleMultiplier = 6
+        }
+        else { //OTHERWISE ASSUME HIT BLUE
+            yAngleMultiplier = 1
+        }
     })
-
-    /*TODO: */
-    //if there was a bounce on a paddle, 
-    //figure out where on paddle
-    //and ball movement appropriately 
-
-    if(checkBallHitTops(ball)){        
-        io.emit('bounce', 'hit up or down!')
-        ballYMovement = changeBallDirection(ballYMovement)
-        yMoveAfterPaddleHit = 0 //not needed
-    }
 
     const winner = checkBallInEndzone(ball)
     if(winner) {
         io.emit('gameOver', winner)
         clearInterval(interval)
+        return
+    }
+
+    if(checkBallHitTops(ball)){        
+        io.emit('bounce', 'hit up or down!')
+        ballYDirection = changeBallDirection(ballYDirection)
     }
 
 
-    ball.x += ballXMovement //increasing this would make ball move faster towards the paddles
-    ball.y += (ballYMovement -= yMoveAfterPaddleHit) //this mutates the y movement, something needs to reset it though or it will cause problems with circling
+    ball.x += (ballXDirection * ballXMovement)//increasing this would make ball move faster towards the paddles
+    ball.y += (ballYDirection * ballYMovement * yAngleMultiplier)
     io.emit('ballMove', ball)
 
 }
@@ -170,13 +177,11 @@ function playPong(ball, yMoveAfterPaddleHit, interval) {
 function startPong() {
     const ball = new GameBall()
 
-    let yMoveAfterPaddleHit = 0
-
     //emit to front end
     io.emit('startPong', ball)
     
     const gameInterval = setInterval(() => {
-        playPong(ball, yMoveAfterPaddleHit, gameInterval)
+        playPong(ball, gameInterval)
     }, refreshRate)
 }
 
