@@ -13,9 +13,13 @@ let paddles = []
 
 class GamePaddel {
     constructor (name, x, y) {
-        this.width = 5
-        this.height = 60 
-        this.color = 'blue'
+        this.width = 4
+        this.height = 80
+        this.mainColor = 'blue'
+        this.edgeColor = 'red'
+        this.middleColor = 'yellow'
+        this.edgeDistanceY = 10
+        this.middleDistanceY = 20
         this.name = name
         this.x = x
         this.y = y
@@ -38,8 +42,8 @@ class GameBall {
 }
 
 const refreshRate = 20
-const player1Start = 10
-const player2Start = 445
+const player1Start = 5
+const player2Start = 475
 
 const paddleStartY = 220
 
@@ -127,6 +131,14 @@ let ballYMovement = 1 //amount they are moving per frame, sign means right or le
 //angle here
 let yAngleMultiplier = 1
 
+function fillRange(bottom, top) {
+    const range = []
+    for (let i = bottom; i < top; i++) {
+        range[i] = i
+    }
+    return range
+}
+
 function playPong(ball, interval) {
 
     const paddleSides = ['left', 'right']
@@ -139,18 +151,26 @@ function playPong(ball, interval) {
 
         //also swtich y, but by varying amounts based on
         //where the ball hit on the paddle
-        var ballBottom = ball.y + (ball.radius)
-        var brickTopRedRange = paddle.y + 30 //+ is down on canvas
-        if(ballBottom < brickTopRedRange) {
+        const ballBottom = ball.y + (ball.radius)
+        const brickRedRange = fillRange(paddle.y, paddle.y+paddle.edgeDistanceY).concat(fillRange(paddle.y + (paddle.height-paddle.edgeDistanceY), paddle.y + paddle.height))
+        const half = paddle.height / 2
+        const otherHalf = paddle.middleDistanceY / 2
+        const start = half - otherHalf
+        const brickYellowRange = fillRange(paddle.y+start, paddle.y+(start+paddle.middleDistanceY))
 
-
-            /*TODO: MAKE RANGES, MAKE INCLUDES TO FIGURE OUT IF IT IS IN ONE OF THE TWO RANGES RED (TOP + BOTTOM), YELLOW */
-
-            //hit top red part of paddle
-            io.emit('bounce', 'hit red!')
-            yAngleMultiplier = 6
+        if(brickRedRange.includes(ballBottom)) {
+            //hit red part of paddle
+            io.emit('bounce', `hit red!`)
+            yAngleMultiplier = 4
+        } 
+        else if(brickYellowRange.includes(ballBottom)) {
+            //hit yellow part of paddle
+            io.emit('bounce', `hit yellow!`)
+            yAngleMultiplier = 0
         }
-        else { //OTHERWISE ASSUME HIT BLUE
+        else {
+            //hit blue part of paddle
+            io.emit('bounce', `hit blue!`)
             yAngleMultiplier = 1
         }
     })

@@ -34,14 +34,17 @@ function updateGameArea() {
 }
 
 function updatePlayerBrick(player) {
-  ctx.fillStyle = player.color
+  ctx.fillStyle = player.mainColor
   ctx.fillRect(player.x, player.y, player.width, player.height)
-  ctx.fillStyle = 'red'
-  ctx.fillRect(player.x, player.y, 5,10) 
-  ctx.fillStyle = 'yellow'
-  ctx.fillRect(player.x, player.y+28, 5,4) 
-  ctx.fillStyle = 'red'
-  ctx.fillRect(player.x, player.y+50, 5,10) 
+  ctx.fillStyle = player.edgeColor
+  ctx.fillRect(player.x, player.y, player.width, player.edgeDistanceY) 
+  const startR = player.height - player.edgeDistanceY
+  ctx.fillRect(player.x, player.y+startR, player.width, player.edgeDistanceY)
+  ctx.fillStyle = player.middleColor
+  const half = player.height / 2
+  const otherHalf = player.middleDistanceY / 2
+  const start = half - otherHalf
+  ctx.fillRect(player.x, player.y+start, player.width, player.middleDistanceY)  
 }
 
 function updateGameBall() {
