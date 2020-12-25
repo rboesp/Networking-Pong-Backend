@@ -139,38 +139,45 @@ function fillRange(bottom, top) {
     return range
 }
 
-function playPong(ball, interval) {
+/**
+ * 
+ * @param {GameBall} ball ball on screen 
+ * @param {Interval} gameLoop interval that dictates game play 
+ */
+function playPong(ball, gameLoop) {
 
-    const paddleSides = ['left', 'right']
+    const sidesOfBoard = ['left', 'right']
     paddles.forEach((paddle,i) => {
-        if(!checkPaddelHit(ball, paddle, paddleSides[i])) return
-        io.emit('bounce', 'hit paddel!!')
+        const sideOfBoard = sidesOfBoard[i]
+        if(!checkPaddelHit(ball, paddle, sideOfBoard)) return
+        io.emit('bounce', `hit paddel ${sideOfBoard}!!`)
 
         //always switch x movement to go other direction
         ballXDirection = changeBallDirection(ballXDirection)
 
-        //also swtich y, but by varying amounts based on
+        //also switch y, but by varying amounts based on
         //where the ball hit on the paddle
+        /**TODO: CHECK MORE THAN BALL.BOTTOM ON BRICK */
         const ballBottom = ball.y + (ball.radius)
-        const brickRedRange = fillRange(paddle.y, paddle.y+paddle.edgeDistanceY).concat(fillRange(paddle.y + (paddle.height-paddle.edgeDistanceY), paddle.y + paddle.height))
+        const paddleEdges = fillRange(paddle.y, paddle.y+paddle.edgeDistanceY).concat(fillRange(paddle.y + (paddle.height-paddle.edgeDistanceY), paddle.y + paddle.height))
         const half = paddle.height / 2
         const otherHalf = paddle.middleDistanceY / 2
         const start = half - otherHalf
-        const brickYellowRange = fillRange(paddle.y+start, paddle.y+(start+paddle.middleDistanceY))
+        const paddleMiddle = fillRange(paddle.y+start, paddle.y+(start+paddle.middleDistanceY))
 
-        if(brickRedRange.includes(ballBottom)) {
+        if(paddleEdges.includes(ballBottom)) {
             //hit red part of paddle
-            io.emit('bounce', `hit red!`)
+            io.emit('bounce', `hit edge!`)
             yAngleMultiplier = 4
         } 
-        else if(brickYellowRange.includes(ballBottom)) {
+        else if(paddleMiddle.includes(ballBottom)) {
             //hit yellow part of paddle
-            io.emit('bounce', `hit yellow!`)
+            io.emit('bounce', `hit middle!`)
             yAngleMultiplier = 0
         }
         else {
             //hit blue part of paddle
-            io.emit('bounce', `hit blue!`)
+            io.emit('bounce', `hit!`)
             yAngleMultiplier = 1
         }
     })
@@ -178,7 +185,7 @@ function playPong(ball, interval) {
     const winner = checkBallInEndzone(ball)
     if(winner) {
         io.emit('gameOver', winner)
-        clearInterval(interval)
+        clearInterval(gameLoop)
         return
     }
 
@@ -188,8 +195,11 @@ function playPong(ball, interval) {
     }
 
 
+    //upadate position of the ball
     ball.x += (ballXDirection * ballXMovement)//increasing this would make ball move faster towards the paddles
     ball.y += (ballYDirection * ballYMovement * yAngleMultiplier)
+    
+    //send new ball position to both clients
     io.emit('ballMove', ball)
 
 }
@@ -207,6 +217,7 @@ function startPong() {
 
 io.on('connection', socket => { 
 
+    /*a client filled out username input box and hit send */
     socket.on('newName', username => {
         const name = username
         console.log(name + ' connected!')
@@ -224,26 +235,24 @@ io.on('connection', socket => {
         startPong()
     })
 
+    /*a client is moving their mouse (theirfore paddle) */
     socket.on('userMove', move => {
-        const playerToUpdate = paddles.filter(player => {
-            return move.name === player.name
-        })[0]
+        const playerToUpdate = paddles.filter(player => move.name === player.name)[0]
         if(!playerToUpdate) return
         playerToUpdate.y = move.y
         io.emit('newMove', paddles)
     })
 
+    /*client exits page */
     socket.on('leaving', name => {
-        paddles = paddles.filter(player => {
-            return player.name !== name
-        })
+        paddles = paddles.filter(player => player.name !== name)
         console.log(name + " disconnected!");
         console.log(paddles);
         io.emit('players', paddles)
     })
  })
 
- // Reload frontend here
+ // Reload frontend on save here
 reload(app)
 .then(function (reloadReturned) {
 
