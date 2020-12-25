@@ -118,8 +118,8 @@ socket.on('gameOver', winner => {
 })
 
 $(document).on('click', "#go-again", () => {
-  console.log('go again!');
-  socket.emit('another', 'another')
+  console.log('START NEXT ROUND!');
+  socket.emit('another', '')
 })
 // //msg room
 // socket.on('data', (arg) => {
