@@ -9,7 +9,11 @@ const port = process.env.PORT || 3000
 app.use(express.static('public'))
 
 //global variables
-let paddles = []
+const paddles = []
+const scores = {
+    'left' : 0,
+    'right' : 0
+}
 
 class GamePaddel {
     constructor (name, x, y) {
@@ -27,17 +31,17 @@ class GamePaddel {
 }
 
 class GameBall {
-    constructor(x , y , radius, startAngle) {
-        this.x = 240;
-        this.y = 140;
-        this.radius = 4; //double for diameter
-        this.startAngle = 0;
-        this.endAngle = 2 * Math.PI;
-        this.speedX = 0;
-        this.speedY = 0;
-        this.gravity = 1;
-        this.gravitySpeed = 50;
-        this.bounce = 0.6;
+    constructor(x, y, radius, startAngle) {
+        this.x = 240
+        this.y = 140
+        this.radius = 4
+        this.startAngle = 0
+        this.endAngle = 2 * Math.PI
+        // this.speedX = 0;
+        // this.speedY = 0;
+        // this.gravity = 1;
+        // this.gravitySpeed = 50;
+        // this.bounce = 0.6;
     }
 }
 
@@ -62,9 +66,11 @@ function checkBallInEndzone(ball) {
     const leftEnd = 0
 
     if(ball.x <= leftEnd) {
+        scores.right += 1
         return 'Winner: Right!'
     }
     if(ball.x >= rightEnd) {
+        scores.left += 1
         return 'Winner: Left!'
     }
     return false
@@ -182,11 +188,11 @@ function playPong(ball, gameLoop) {
         }
     })
 
-    const winner = checkBallInEndzone(ball)
-    if(winner) {
-        io.emit('gameOver', winner)
+    const roundWinner = checkBallInEndzone(ball)
+    if(roundWinner) {
+        io.emit('gameOver', roundWinner)
         clearInterval(gameLoop)
-        return
+        return true
     }
 
     if(checkBallHitTops(ball)){        
@@ -202,6 +208,7 @@ function playPong(ball, gameLoop) {
     //send new ball position to both clients
     io.emit('ballMove', ball)
 
+    return false
 }
 
 function startPong() {
@@ -211,7 +218,14 @@ function startPong() {
     io.emit('startPong', ball)
     
     const gameInterval = setInterval(() => {
-        playPong(ball, gameInterval)
+        const roundOver = playPong(ball, gameInterval)
+
+        //here you can reset the interval
+        //if play pong returns a flag
+        if(!roundOver) return
+        console.log('Round Over!');
+        console.log(scores);
+
     }, refreshRate)
 }
 
@@ -241,6 +255,11 @@ io.on('connection', socket => {
         if(!playerToUpdate) return
         playerToUpdate.y = move.y
         io.emit('newMove', paddles)
+    })
+
+    socket.on('another', arg => {
+        io.emit('hide-go-again', "")
+        startPong()
     })
 
     /*client exits page */

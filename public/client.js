@@ -104,24 +104,23 @@ socket.on('ballMove', newBall => {
 
 socket.on('bounce', arg => {
   console.log(arg);
-  // switch (arg) {
-  //   case 'hit left!':
-  //     $('#left').attr('class', 'hit')
-  //     $('#right').attr('class', 'no-hit')
-  //     break;
-  //   case 'hit right!':
-  //     $('#right').attr('class', 'hit')
-  //     $('#left').attr('class', 'no-hit')
-  //     break;
-  //   default:
-  //     break;
-  // }
+})
+
+socket.on('hide-go-again', arg => {
+  $('#go-again').prop('hidden', true)
 })
 
 socket.on('gameOver', winner => {
   console.log(winner);
+  // const againBtn = $('')
+  // $("body").prepend(againBtn)
+  $('#go-again').prop('hidden', false)
 })
 
+$(document).on('click', "#go-again", () => {
+  console.log('go again!');
+  socket.emit('another', 'another')
+})
 // //msg room
 // socket.on('data', (arg) => {
 //   $('#chat-room').val($('#chat-room').val() + arg + '\n')
@@ -132,7 +131,8 @@ socket.on('gameOver', winner => {
 window.onload = function() {
 
   /*ENTRY POINT */
-  $('#send-btn').prop('disabled', true)
+  // $('#send-btn').prop('disabled', true)
+  $('#go-again').prop('hidden', true)
 
   /*EVENT LISTENERS */
   $('#username-submit').click(startBoard)
