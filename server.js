@@ -2,7 +2,7 @@ const express = require("express")
 const app = express()
 const http = require("http").createServer(app)
 const io = require("socket.io")(http)
-let reload = require("reload")
+const reload = require("reload")
 
 /**PORT */
 const port = process.env.PORT || 3000
@@ -10,7 +10,11 @@ const port = process.env.PORT || 3000
 /*MIDDLEWARE */
 app.use(express.static("public"))
 
-/*GLOBAL VARIABLES*/
+/**
+ *
+ * GLOBAL VARIABLES
+ *
+ * */
 const paddles = []
 const scores = {
     left: 0,
@@ -46,8 +50,6 @@ class GameBall {
         // this.bounce = 0.6;
     }
 }
-//changes speed of game
-const refreshRate = 10
 
 //position of players to start
 const player1Start = 5
@@ -60,17 +62,30 @@ const paddleStartY = 220
 const boardWidth = 480
 const boardHeight = 270
 
+//default direction the ball goes at start
 let ballXDirection = -1 //left
 let ballYDirection = -1 //up
-let ballXMovement = 3
+
+/*below change game speed */
+
+//changes speed of game
+const refreshRate = 10
 
 //amount they are moving per frame,
-//sign means right or left, up or down
-//angle here
+//sign controls direction, right left, up down (x,y)
 let ballYMovement = 1
+let ballXMovement = 3
+
+/* TODO: figure out what this does */
+//pretty sure it controls the y bounce
+//of the ball after a paddel hit
 let yAngleMultiplier = 1
 
-/**FUNCTIONS */
+/**
+ *
+ * FUNCTIONS
+ *
+ * */
 
 //makes something used on the canvas in the game
 function makeNewPiece(name) {
