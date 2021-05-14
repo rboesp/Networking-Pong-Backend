@@ -121,6 +121,7 @@ socket.on("startPong", (startBall) => {
 socket.on("ballMove", (newBall) => {
     // console.log('receiving...');
     gameBall = newBall
+    $("#go-again").hide()
 })
 
 socket.on("bounce", (arg) => {
@@ -128,7 +129,7 @@ socket.on("bounce", (arg) => {
 })
 
 socket.on("hide-go-again", (arg) => {
-    $("#go-again").prop("hidden", true)
+    $("#go-again").hide()
 })
 
 socket.on("gameOver", (winner) => {
@@ -137,6 +138,7 @@ socket.on("gameOver", (winner) => {
     // const againBtn = $('')
     // $("body").prepend(againBtn)
     $("#go-again").prop("hidden", false)
+    $("#go-again").show()
 })
 
 socket.on("scores", (scores) => {
