@@ -18,9 +18,14 @@ function sendDisconnectToServer(e) {
 }
 
 function sendMoveToServer(e) {
+    function translatedY(y) {
+        var rect = canvas.getBoundingClientRect()
+        var factor = canvas.width / rect.width
+        return factor * (y - rect.top)
+    }
     const move = {
         name: username,
-        y: e.pageY,
+        y: translatedY(e.clientY),
     }
     socket.emit("userMove", move)
 }
