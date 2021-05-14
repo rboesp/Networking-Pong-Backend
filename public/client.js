@@ -165,5 +165,6 @@ window.onload = function () {
 
     /*EVENT LISTENERS */
     // $("#username-submit").click(startBoard)
+    $(".toast").toast("show")
     startBoard()
 }
