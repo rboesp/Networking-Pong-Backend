@@ -234,6 +234,7 @@ function startPong() {
     //emit to front end that game is starting
     io.emit("startPong", ball)
 
+    /* TODO: make this a named function */
     /**GAME LOOP */
     const gameLoop = setInterval(() => {
         //is round going?
@@ -241,6 +242,8 @@ function startPong() {
         if (!roundOver) return
 
         /**IF HERE, ROUND OVER */
+
+        /* TODO: INCREASE SCORE here */
 
         //tell others game over
         io.emit("gameOver", roundOver)
@@ -254,6 +257,11 @@ function startPong() {
     }, refreshRate)
 }
 
+/**
+ *
+ * io event listners
+ * todo put these in another file
+ */
 io.on("connection", (socket) => {
     /*a client filled out username input box and hit send */
     socket.on("newName", (username) => {
@@ -283,7 +291,7 @@ io.on("connection", (socket) => {
 
     socket.on("another", (arg) => {
         io.emit("hide-go-again", "")
-        startPong()
+        startPong() //can this be play pong?
     })
 
     /*client exits page */

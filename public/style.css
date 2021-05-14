@@ -3,6 +3,16 @@
     cursor: none;
 }
 
+body {
+    position: relative;
+}
+
+#go-again {
+    position: absolute;
+    top: 55%;
+    left: 48%;
+}
+
 .hit {
     color: red;
 }
