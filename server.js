@@ -2,13 +2,15 @@ const express = require("express")
 const app = express()
 const http = require("http").createServer(app)
 const io = require("socket.io")(http)
-var reload = require("reload")
+let reload = require("reload")
 
+/**PORT */
 const port = process.env.PORT || 3000
 
+/*MIDDLEWARE */
 app.use(express.static("public"))
 
-//global variables
+/*GLOBAL VARIABLES*/
 const paddles = []
 const scores = {
     left: 0,
@@ -44,16 +46,33 @@ class GameBall {
         // this.bounce = 0.6;
     }
 }
-
+//changes speed of game
 const refreshRate = 10
+
+//position of players to start
 const player1Start = 5
 const player2Start = 475
 
+//position of paddle to start
 const paddleStartY = 220
 
+//size of board in px
 const boardWidth = 480
 const boardHeight = 270
 
+let ballXDirection = -1 //left
+let ballYDirection = -1 //up
+let ballXMovement = 3
+
+//amount they are moving per frame,
+//sign means right or left, up or down
+//angle here
+let ballYMovement = 1
+let yAngleMultiplier = 1
+
+/**FUNCTIONS */
+
+//makes something used on the canvas in the game
 function makeNewPiece(name) {
     const paddleStartX = !paddles.length ? player1Start : player2Start
     console.log(paddleStartX)
@@ -96,18 +115,16 @@ function changeBallDirection(dir) {
 /**
  * TODO: don't use x and y but speed x and y ???
  */
-const checkPaddelHit = function (ball, paddle, paddleSide) {
-    var ballTop = ball.y
-    var ballBottom = ball.y + ball.radius
-    var ballLeft = ball.x
-    var ballRight = ball.x + ball.radius
-
-    var brickLeft = paddle.x
-    var brickRight = paddle.x + paddle.width
-    var brickTop = paddle.y
-    var brickBottom = paddle.y + paddle.height
-
-    var crash = false
+function checkPaddelHit(ball, paddle, paddleSide) {
+    let ballTop = ball.y
+    let ballBottom = ball.y + ball.radius
+    let ballLeft = ball.x
+    let ballRight = ball.x + ball.radius
+    let brickLeft = paddle.x
+    let brickRight = paddle.x + paddle.width
+    let brickTop = paddle.y
+    let brickBottom = paddle.y + paddle.height
+    let crash = false
 
     if (paddleSide === "left") {
         if (brickBottom >= ballBottom && brickRight >= ballLeft && brickTop <= ballTop) {
@@ -121,13 +138,6 @@ const checkPaddelHit = function (ball, paddle, paddleSide) {
     return crash
 }
 
-let ballXDirection = -1 //left
-let ballYDirection = -1 //up
-let ballXMovement = 3
-let ballYMovement = 1 //amount they are moving per frame, sign means right or left, up or down
-//angle here
-let yAngleMultiplier = 1
-
 function fillRange(bottom, top) {
     const range = []
     for (let i = bottom; i < top; i++) {
@@ -139,10 +149,11 @@ function fillRange(bottom, top) {
 /**
  *
  * @param {GameBall} ball ball on screen
- * @param {Interval} gameLoop interval that dictates game play
  */
-function playPong(ball, gameLoop) {
+function playPong(ball) {
     const sidesOfBoard = ["left", "right"]
+
+    /**todo: change this long function */
     paddles.forEach((paddle, i) => {
         const sideOfBoard = sidesOfBoard[i]
         if (!checkPaddelHit(ball, paddle, sideOfBoard)) return
@@ -178,13 +189,14 @@ function playPong(ball, gameLoop) {
         }
     })
 
-    const roundWinner = checkBallInEndzone(ball)
-    if (roundWinner) {
-        io.emit("gameOver", roundWinner)
-        clearInterval(gameLoop)
-        return true
-    }
+    //for loop over, checked both paddles
 
+    //check if round over
+    /* TODO: make this a named function */
+    const ballInEndZone = checkBallInEndzone(ball)
+    if (ballInEndZone) return true //round over
+
+    /**if here, game is going, no round winner yet */
     if (checkBallHitTops(ball)) {
         io.emit("bounce", "hit up or down!")
         ballYDirection = changeBallDirection(ballYDirection)
@@ -197,22 +209,32 @@ function playPong(ball, gameLoop) {
     //send new ball position to both clients
     io.emit("ballMove", ball)
 
-    return false
+    return false //false means round not over yet
 }
 
+//starts game
 function startPong() {
     const ball = new GameBall()
 
-    //emit to front end
+    //emit to front end that game is starting
     io.emit("startPong", ball)
 
-    const gameInterval = setInterval(() => {
-        const roundOver = playPong(ball, gameInterval)
-
-        //here you can reset the interval
-        //if play pong returns a flag
+    /**GAME LOOP */
+    const gameLoop = setInterval(() => {
+        //is round going?
+        const roundOver = playPong(ball)
         if (!roundOver) return
+
+        /**IF HERE, ROUND OVER */
+
+        //tell others game over
+        io.emit("gameOver", roundOver)
+
+        //stops ball from moving
+        clearInterval(gameLoop)
         console.log("Round Over!")
+
+        //show scores here
         console.log(scores)
     }, refreshRate)
 }
