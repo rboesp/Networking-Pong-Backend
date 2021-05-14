@@ -110,6 +110,7 @@ socket.on("hide-go-again", (arg) => {
 
 socket.on("gameOver", (winner) => {
     console.log(winner)
+    canvas.style.cursor = "default"
     // const againBtn = $('')
     // $("body").prepend(againBtn)
     $("#go-again").prop("hidden", false)
@@ -117,6 +118,7 @@ socket.on("gameOver", (winner) => {
 
 $(document).on("click", "#go-again", () => {
     console.log("START NEXT ROUND!")
+    canvas.style.cursor = "none"
     socket.emit("another", "")
 })
 // //msg room
@@ -125,9 +127,6 @@ $(document).on("click", "#go-again", () => {
 //   $("#chat-room").scrollTop = $("#chat-room").scrollHeight
 // })
 
-/**
- * TODO: when round is over, make cursor available in canvass
- */
 window.onload = function () {
     /*ENTRY POINT */
     // $('#send-btn').prop('disabled', true)
