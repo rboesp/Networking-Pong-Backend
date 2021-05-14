@@ -123,7 +123,7 @@ $(document).on("click", "#go-again", () => {
 })
 // //msg room
 // socket.on('data', (arg) => {
-//   $('#chat-room').val($('#chat-room').val() + arg + '\n')
+//   $('#chat-room').al($('#chat-room').val() + arg + '\n')
 //   $("#chat-room").scrollTop = $("#chat-room").scrollHeight
 // })
 

@@ -15,14 +15,14 @@ app.use(express.static("public"))
  * GLOBAL VARIABLES
  *
  * */
-const paddles = []
-const scores = {
+let paddles = []
+let scores = {
     left: 0,
     right: 0,
 }
 
 class GamePaddel {
-    constructor(name, x, y) {
+    constructor(name, id, x, y) {
         this.width = 4
         this.height = 80
         this.mainColor = "blue"
@@ -31,6 +31,7 @@ class GamePaddel {
         this.edgeDistanceY = 10
         this.middleDistanceY = 20
         this.name = name
+        this.id = id
         this.x = x
         this.y = y
     }
@@ -88,10 +89,10 @@ let yAngleMultiplier = 1
  * */
 
 //makes something used on the canvas in the game
-function makeNewPiece(name) {
+function makeNewPiece(name, id) {
     const paddleStartX = !paddles.length ? player1Start : player2Start
     console.log(paddleStartX)
-    const newPlayer = new GamePaddel(name, paddleStartX, paddleStartY)
+    const newPlayer = new GamePaddel(name, id, paddleStartX, paddleStartY)
     return newPlayer
 }
 
@@ -271,7 +272,7 @@ io.on("connection", (socket) => {
         const playerNames = paddles.map((player) => player.name)
 
         if (!playerNames.includes(name)) {
-            const newGamePiece = makeNewPiece(name)
+            const newGamePiece = makeNewPiece(name, socket.id)
             paddles.push(newGamePiece)
         }
 
@@ -283,7 +284,7 @@ io.on("connection", (socket) => {
 
     /*a client is moving their mouse (theirfore paddle) */
     socket.on("userMove", (move) => {
-        const playerToUpdate = paddles.filter((player) => move.name === player.name)[0]
+        const playerToUpdate = paddles.filter((player) => socket.id === player.id)[0]
         if (!playerToUpdate) return
         playerToUpdate.y = move.y
         io.emit("newMove", paddles)
@@ -296,9 +297,25 @@ io.on("connection", (socket) => {
 
     /*client exits page */
     socket.on("leaving", (name) => {
-        paddles = paddles.filter((player) => player.name !== name)
+        paddles = paddles.filter((player) => socket.id !== player.id)
         console.log(name + " disconnected!")
         console.log(paddles)
+        scores = {
+            left: 0,
+            right: 0,
+        }
+        io.emit("players", paddles)
+    })
+
+    /*client exits page */
+    socket.on("disconnect", () => {
+        console.log(socket.id)
+        paddles = paddles.filter((player) => socket.id !== player.id)
+        console.log(paddles)
+        scores = {
+            left: 0,
+            right: 0,
+        }
         io.emit("players", paddles)
     })
 })
