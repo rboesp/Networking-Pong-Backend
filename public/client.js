@@ -11,6 +11,8 @@ let username = ""
  */
 
 /*FUNCTIONS */
+
+//so far isn't being called I don't think
 function sendDisconnectToServer(e) {
     socket.emit("leaving", username)
 }
@@ -23,6 +25,7 @@ function sendMoveToServer(e) {
     socket.emit("userMove", move)
 }
 
+//happens every {refreshRate} millisenconds
 function updateGameArea() {
     clearBoard()
     players.forEach((player) => {
@@ -31,6 +34,7 @@ function updateGameArea() {
     updateGameBall()
 }
 
+//all this stuff in here is for the colors on the brick for testing, take out later
 function updatePlayerBrick(player) {
     ctx.fillStyle = player.mainColor
     ctx.fillRect(player.x, player.y, player.width, player.height)
@@ -45,6 +49,7 @@ function updatePlayerBrick(player) {
     ctx.fillRect(player.x, player.y + start, player.width, player.middleDistanceY)
 }
 
+//moves the ball, called once every {refreshRate} milliseconds
 function updateGameBall() {
     ctx.fillStyle = "red"
     ctx.beginPath()
@@ -52,22 +57,35 @@ function updateGameBall() {
     ctx.fill()
 }
 
+//called once every {refreshRate} milliseconds
 function clearBoard() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 }
 
+//called when starting a new round
 function startBoard() {
-    username = $("#enter-username").val()
-    // username = Math.floor(Math.random()*10)+1
+    /**fo real */
+    // username = $("#enter-username").val()
+
+    /**for testing */
+    username = Math.floor(Math.random() * 1000) + 1
+    console.log(username)
+    $(".username").text(username)
+
+    //
     $("#username-row").hide()
     $("#welcome-row").hide()
     $("#send-btn").prop("disabled", false)
 
     socket.emit("newName", username)
 
-    /*EVENT LISTENERS */
+    /*BOARD EVENT LISTENERS */
     document.addEventListener("mousemove", sendMoveToServer)
+
+    /* TODO: figure out what to do here */
     document.addEventListener("unload", sendDisconnectToServer)
+
+    //game loop
     setInterval(updateGameArea, 20)
 }
 
@@ -116,6 +134,12 @@ socket.on("gameOver", (winner) => {
     $("#go-again").prop("hidden", false)
 })
 
+socket.on("scores", (scores) => {
+    // console.log(scores)
+    $(".left").text(scores.left)
+    $(".right").text(scores.right)
+})
+
 $(document).on("click", "#go-again", () => {
     console.log("START NEXT ROUND!")
     canvas.style.cursor = "none"
@@ -133,6 +157,6 @@ window.onload = function () {
     $("#go-again").prop("hidden", true)
 
     /*EVENT LISTENERS */
-    $("#username-submit").click(startBoard)
-    // startBoard()
+    // $("#username-submit").click(startBoard)
+    startBoard()
 }

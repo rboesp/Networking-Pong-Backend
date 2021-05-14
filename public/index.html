@@ -16,7 +16,8 @@
         <button id="go-again">Go again</button>
         <div class="container bg-light mt-5">
             <div id="welcome-row " class="row mb-3">
-                <h1 class="col-12 p-2 text-center">Play pong</h1>
+                <!-- <h1 class="col-8 p-2 text-center">Play pong</h1> -->
+                <h1 class="col-12 text-center username"></h1>
             </div>
             <!-- <h1 id="left" class="no-hit">LEFT</h1>
             <h1 id="right" class="no-hit">RIGHT</h1> -->
@@ -26,8 +27,8 @@
                 <button id="username-submit" class="btn btn-primary col-4">Connect</button>
             </div>
             <div class="row" id="scores-row">
-                <h1 class="col-6">0</h1>
-                <h1 class="col-6 text-end">0</h1>
+                <h1 class="left col-6">0</h1>
+                <h1 class="right col-6 text-end">0</h1>
                 <div class="col text-center m-2 mb-4">
                     <canvas class="col-10" id="board" width="480" height="270"></canvas>
                 </div>

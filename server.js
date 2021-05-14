@@ -101,13 +101,17 @@ function checkBallInEndzone(ball) {
     const leftEnd = 0
 
     if (ball.x <= leftEnd) {
+        //emit here
         scores.right += 1
+        io.emit("scores", scores)
         return "Winner: Right!"
     }
     if (ball.x >= rightEnd) {
         scores.left += 1
+        io.emit("scores", scores)
         return "Winner: Left!"
     }
+
     return false
 }
 
@@ -305,6 +309,7 @@ io.on("connection", (socket) => {
             right: 0,
         }
         io.emit("players", paddles)
+        io.emit("scores", scores)
     })
 
     /*client exits page */
@@ -317,6 +322,7 @@ io.on("connection", (socket) => {
             right: 0,
         }
         io.emit("players", paddles)
+        io.emit("scores", scores)
     })
 })
 
