@@ -14,7 +14,7 @@ let username = ""
 
 //so far isn't being called I don't think
 function sendDisconnectToServer(e) {
-    socket.emit("leaving", username)
+    socket.emit("leaving", "")
 }
 
 function sendMoveToServer(e) {
@@ -34,24 +34,24 @@ function sendMoveToServer(e) {
 function updateGameArea() {
     clearBoard()
     players.forEach((player) => {
-        updatePlayerBrick(player)
+        updatePlayerBrick(player.paddel)
     })
     updateGameBall()
 }
 
 //all this stuff in here is for the colors on the brick for testing, take out later
-function updatePlayerBrick(player) {
-    ctx.fillStyle = player.mainColor
-    ctx.fillRect(player.x, player.y, player.width, player.height)
-    ctx.fillStyle = player.edgeColor
-    ctx.fillRect(player.x, player.y, player.width, player.edgeDistanceY)
-    const startR = player.height - player.edgeDistanceY
-    ctx.fillRect(player.x, player.y + startR, player.width, player.edgeDistanceY)
-    ctx.fillStyle = player.middleColor
-    const half = player.height / 2
-    const otherHalf = player.middleDistanceY / 2
+function updatePlayerBrick(brick) {
+    ctx.fillStyle = brick.mainColor
+    ctx.fillRect(brick.x, brick.y, brick.width, brick.height)
+    ctx.fillStyle = brick.edgeColor
+    ctx.fillRect(brick.x, brick.y, brick.width, brick.edgeDistanceY)
+    const startR = brick.height - brick.edgeDistanceY
+    ctx.fillRect(brick.x, brick.y + startR, brick.width, brick.edgeDistanceY)
+    ctx.fillStyle = brick.middleColor
+    const half = brick.height / 2
+    const otherHalf = brick.middleDistanceY / 2
     const start = half - otherHalf
-    ctx.fillRect(player.x, player.y + start, player.width, player.middleDistanceY)
+    ctx.fillRect(brick.x, brick.y + start, brick.width, brick.middleDistanceY)
 }
 
 //moves the ball, called once every {refreshRate} milliseconds

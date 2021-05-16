@@ -15,14 +15,8 @@ app.use(express.static("public"))
  * GLOBAL VARIABLES
  *
  * */
-let paddles = []
-let scores = {
-    left: 0,
-    right: 0,
-}
-
 class GamePaddel {
-    constructor(name, id, x, y) {
+    constructor(x, y) {
         this.width = 4
         this.height = 80
         this.mainColor = "blue"
@@ -30,8 +24,6 @@ class GamePaddel {
         this.middleColor = "yellow"
         this.edgeDistanceY = 10
         this.middleDistanceY = 20
-        this.name = name
-        this.id = id
         this.x = x
         this.y = y
     }
@@ -50,6 +42,22 @@ class GameBall {
         // this.gravitySpeed = 50;
         // this.bounce = 0.6;
     }
+}
+
+class Player {
+    constructor(id, name, paddel, score = 0) {
+        this.id = id
+        this.name = name
+        this.paddel = paddel
+        // this.side = side
+        this.score = score
+    }
+}
+
+const players = new Map()
+let scores = {
+    left: 0,
+    right: 0,
 }
 
 //position of players to start
@@ -89,10 +97,11 @@ let yAngleMultiplier = 1
  * */
 
 //makes something used on the canvas in the game
-function makeNewPiece(name, id) {
-    const paddleStartX = !paddles.length ? player1Start : player2Start
+function makeNewPlayer(id, name) {
+    const paddleStartX = !players.size ? player1Start : player2Start
     console.log(paddleStartX)
-    const newPlayer = new GamePaddel(name, id, paddleStartX, paddleStartY)
+    const newPaddel = new GamePaddel(paddleStartX, paddleStartY)
+    const newPlayer = new Player(id, name, newPaddel)
     return newPlayer
 }
 
@@ -172,6 +181,7 @@ function fillRange(bottom, top) {
  */
 function playPong(ball) {
     const sidesOfBoard = ["left", "right"]
+    const paddles = [...players.values()].map((p) => p.paddel)
 
     /**todo: change this long function */
     paddles.forEach((paddle, i) => {
@@ -268,30 +278,30 @@ function startPong() {
  * todo put these in another file
  */
 io.on("connection", (socket) => {
+    const { id } = socket
+
     /*a client filled out username input box and hit send */
     socket.on("newName", (username) => {
         const name = username
         console.log(name + " connected!")
 
-        const playerNames = paddles.map((player) => player.name)
-
-        if (!playerNames.includes(name)) {
-            const newGamePiece = makeNewPiece(name, socket.id)
-            paddles.push(newGamePiece)
+        if (!players.get(id)) {
+            const newPlayer = makeNewPlayer(id, name)
+            players.set(id, newPlayer)
         }
 
-        io.emit("players", paddles)
+        io.emit("players", [...players.values()])
 
-        if (paddles.length !== 2) return
+        if (players.size !== 2) return
         startPong()
     })
 
     /*a client is moving their mouse (theirfore paddle) */
     socket.on("userMove", (move) => {
-        const playerToUpdate = paddles.filter((player) => socket.id === player.id)[0]
+        const playerToUpdate = players.get(id)
         if (!playerToUpdate) return
-        playerToUpdate.y = move.y
-        io.emit("newMove", paddles)
+        playerToUpdate.paddel.y = move.y
+        io.emit("newMove", [...players.values()])
     })
 
     socket.on("another", (arg) => {
@@ -299,31 +309,23 @@ io.on("connection", (socket) => {
         startPong() //can this be play pong?
     })
 
-    /*client exits page */
-    socket.on("leaving", (name) => {
-        paddles = paddles.filter((player) => socket.id !== player.id)
-        console.log(name + " disconnected!")
-        console.log(paddles)
+    const leave = () => {
+        players.delete(id)
+        console.log(id + " disconnected!")
+        console.log([...players.values()])
         scores = {
             left: 0,
             right: 0,
         }
-        io.emit("players", paddles)
+        io.emit("players", [...players.values()])
         io.emit("scores", scores)
-    })
+    }
 
     /*client exits page */
-    socket.on("disconnect", () => {
-        console.log(socket.id)
-        paddles = paddles.filter((player) => socket.id !== player.id)
-        console.log(paddles)
-        scores = {
-            left: 0,
-            right: 0,
-        }
-        io.emit("players", paddles)
-        io.emit("scores", scores)
-    })
+    socket.on("leaving", leave)
+
+    /*client exits page */
+    socket.on("disconnect", leave)
 })
 
 // Reload frontend on save here
