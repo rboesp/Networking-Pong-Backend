@@ -45,11 +45,11 @@ class GameBall {
 }
 
 class Player {
-    constructor(id, name, paddel, score = 0) {
+    constructor(id, name, paddel, side, score = 0) {
         this.id = id
         this.name = name
         this.paddel = paddel
-        // this.side = side
+        this.side = side
         this.score = score
     }
 }
@@ -96,12 +96,33 @@ let yAngleMultiplier = 1
  *
  * */
 
+const taken = {
+    p1: null,
+    p2: null,
+}
+
+function pNum() {
+    let { p1, p2 } = taken
+    if (!p1 && !p2) {
+        taken.p1 = "taken"
+        return [player1Start, "left"]
+    } else if (p1 && !p2) {
+        taken.p2 = "taken"
+        return [player2Start, "right"]
+    } else if (!p1 && p2) {
+        taken.p1 = "taken"
+        return [player1Start, "left"]
+    }
+    return
+}
+
 //makes something used on the canvas in the game
 function makeNewPlayer(id, name) {
-    const paddleStartX = !players.size ? player1Start : player2Start
-    console.log(paddleStartX)
+    const [paddleStartX, side] = pNum()
+    // console.log(paddleStartX)
     const newPaddel = new GamePaddel(paddleStartX, paddleStartY)
-    const newPlayer = new Player(id, name, newPaddel)
+    const newPlayer = new Player(id, name, newPaddel, side)
+    console.log(newPlayer.side)
     return newPlayer
 }
 
@@ -310,6 +331,12 @@ io.on("connection", (socket) => {
     })
 
     const leave = () => {
+        const side = players.get(id).side
+        if (side === "left") {
+            taken.p1 = null
+        } else {
+            taken.p2 = null
+        }
         players.delete(id)
         console.log(id + " disconnected!")
         console.log([...players.values()])
