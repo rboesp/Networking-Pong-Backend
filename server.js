@@ -96,24 +96,25 @@ let yAngleMultiplier = 1
  *
  * */
 
-const taken = {
-    p1: null,
-    p2: null,
+const sides_taken = {
+    left: null,
+    right: null,
 }
 
 function pNum() {
-    let { p1, p2 } = taken
+    let { left: p1, right: p2 } = sides_taken
     if (!p1 && !p2) {
-        taken.p1 = "taken"
+        sides_taken.left = "taken"
         return [player1Start, "left"]
     } else if (p1 && !p2) {
-        taken.p2 = "taken"
+        sides_taken.right = "taken"
         return [player2Start, "right"]
     } else if (!p1 && p2) {
-        taken.p1 = "taken"
+        sides_taken.left = "taken"
         return [player1Start, "left"]
     }
-    return
+    return []
+    // throw new Error("badda!") //for testing!
 }
 
 //makes something used on the canvas in the game
@@ -331,12 +332,9 @@ io.on("connection", (socket) => {
     })
 
     const leave = () => {
-        const side = players.get(id).side
-        if (side === "left") {
-            taken.p1 = null
-        } else {
-            taken.p2 = null
-        }
+        const { side } = players.get(id)
+        if (!side) return
+        sides_taken[side] = null
         players.delete(id)
         console.log(id + " disconnected!")
         console.log([...players.values()])
