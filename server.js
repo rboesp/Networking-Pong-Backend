@@ -1,14 +1,18 @@
 const express = require("express")
 const app = express()
 const http = require("http").createServer(app)
-const io = require("socket.io")(http)
+const io = require("socket.io")(http, {
+    cors: {
+        origin: "*",
+    },
+})
 const reload = require("reload")
 
 /**PORT */
 const port = process.env.PORT || 3000
 
 /*MIDDLEWARE */
-app.use(express.static("public"))
+// app.use(express.static("public"))
 
 /**
  *
