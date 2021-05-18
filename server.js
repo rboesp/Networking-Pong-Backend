@@ -306,6 +306,8 @@ function startPong() {
 io.on("connection", (socket) => {
     const { id } = socket
 
+    console.log(id)
+
     /*a client filled out username input box and hit send */
     socket.on("newName", (username) => {
         const name = username
