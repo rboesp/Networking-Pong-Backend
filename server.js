@@ -11,9 +11,6 @@ const reload = require("reload")
 /**PORT */
 const port = process.env.PORT || 3000
 
-/*MIDDLEWARE */
-// app.use(express.static("public"))
-
 /**
  *
  * GLOBAL VARIABLES
