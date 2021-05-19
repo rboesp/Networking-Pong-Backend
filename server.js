@@ -102,7 +102,7 @@ const sides_taken = {
     right: null,
 }
 
-function pNum() {
+function getPlayerNum() {
     let { left: p1, right: p2 } = sides_taken
     if (!p1 && !p2) {
         sides_taken.left = "taken"
@@ -120,7 +120,7 @@ function pNum() {
 
 //makes something used on the canvas in the game
 function makeNewPlayer(id, name) {
-    const [paddleStartX, side] = pNum()
+    const [paddleStartX, side] = getPlayerNum()
     // console.log(paddleStartX)
     const newPaddel = new GamePaddel(paddleStartX, paddleStartY)
     const newPlayer = new Player(id, name, newPaddel, side)
@@ -315,7 +315,9 @@ io.on("connection", (socket) => {
             players.set(id, newPlayer)
         }
 
+        const { side } = players.get(id)
         io.emit("players", [...players.values()])
+        io.emit("playerCount", side)
 
         if (players.size !== 2) return
         startPong()
@@ -345,8 +347,10 @@ io.on("connection", (socket) => {
             left: 0,
             right: 0,
         }
+        io.emit("playerCount", side)
         io.emit("players", [...players.values()])
         io.emit("scores", scores)
+        io.emit("left", "")
     }
 
     /*client exits page */
